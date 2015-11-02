@@ -241,22 +241,10 @@ def TransInv(T):
         R, p = TransToRp(T)
         Rt = RotInv(R)
         pt = np.dot(Rt, p)
-        return [[Rt[0][0],
-          Rt[0][1],
-          Rt[0][2],
-          -pt[0]],
-         [Rt[1][0],
-          Rt[1][1],
-          Rt[1][2],
-          -pt[1]],
-         [Rt[2][0],
-          Rt[2][1],
-          Rt[2][2],
-          -pt[2]],
-         [0,
-          0,
-          0,
-          1]]
+        return [[Rt[0][0],Rt[0][1],Rt[0][2],-pt[0]],
+         [Rt[1][0],Rt[1][1],Rt[1][2],-pt[1]],
+         [Rt[2][0],Rt[2][1],Rt[2][2],-pt[2]],
+         [0,0,0,1]]
     except:
         print 'Input matrix is not an element of SE3'
 
@@ -561,10 +549,10 @@ def BodyJacobian(Theta, Bi, *argv):
         n = len(Theta)
     for i in range(n):
         if i == n-1:
-            Jb.append(np.asarray(Bi[i][:]) * Theta[i])
+            Jb.append(np.asarray(Bi[i][:]))# * Theta[i])
         else:
-            temp = MatrixExp6(-1*np.asarray(Bi[i][:]) * Theta[i])
-            for j in range(n-1, -1, i+1):
+            temp = MatrixExp6(-1*np.asarray(Bi[n-1][:]) * Theta[n-1])
+            for j in range(n-2, i, -1):
                 temp = np.dot(temp, MatrixExp6(-1*np.asarray(Bi[j][:]) * Theta[j]))
 
             Jb.append(np.dot(Adjoint(temp), Bi[i][:]))
@@ -577,11 +565,11 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
         epsilon_w = argv[1]
     else:
         # set default tolerance
-        epsilon_w = 10e-3
-        epsilon_v = 10e-3
+        epsilon_w = 10e-1
+        epsilon_v = 10e-2
 
     # initialize parameters
-    maxIter = 500
+    maxIter = 10
     i = 0
     Tsb = FKinBody( M, Bi, theta0 )
     Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
@@ -598,6 +586,4 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
         wb = [Vb[0],Vb[1],Vb[2]]
         vb = [Vb[3],Vb[4],Vb[5]]
         thetaStor.append(theta0)
-
     return thetaStor
-
