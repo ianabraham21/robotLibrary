@@ -554,19 +554,50 @@ def BodyJacobian(Theta, Bi, *argv):
     Output:
     No idea yet
     """
-    Js = []
+    Jb = []
     if argv:
         n = argv[0]
     else:
         n = len(Theta)
     for i in range(n):
-        if i == 0:
+        if i == n-1:
             Jb.append(np.asarray(Bi[i][:]) * Theta[i])
         else:
-            temp = MatrixExp6(np.asarray(Si[i][:]) * Theta[i])
-            for j in range(i, -1, -1):
-                temp = np.dot(temp, MatrixExp6(np.asarray(Si[j - 1][:]) * Theta[j - 1]))
+            temp = MatrixExp6(-1*np.asarray(Bi[i][:]) * Theta[i])
+            for j in range(n-1, -1, i+1):
+                temp = np.dot(temp, MatrixExp6(-1*np.asarray(Bi[j][:]) * Theta[j]))
 
-            Jb.append(np.dot(Adjoint(temp), Si[i][:]))
+            Jb.append(np.dot(Adjoint(temp), Bi[i][:]))
 
     return Jb
+
+def IKinBody(Bi, M, Tsd, theta0, *argv):
+    if argv:
+        epsilon_v = argv[0]
+        epsilon_w = argv[1]
+    else:
+        # set default tolerance
+        epsilon_w = 10e-3
+        epsilon_v = 10e-3
+
+    # initialize parameters
+    maxIter = 500
+    i = 0
+    Tsb = FKinBody( M, Bi, theta0 )
+    Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
+    wb = [Vb[0],Vb[1],Vb[2]]
+    vb = [Vb[3],Vb[4],Vb[5]]
+    thetaStor = [np.asarray(theta0)]
+    # run the loop
+    while (np.linalg.norm(wb) > epsilon_w or np.linalg.norm(vb) > epsilon_v) and i<maxIter:
+        Jb = BodyJacobian(theta0, Bi)
+        theta0 = theta0 + np.dot( np.linalg.pinv(Jb), Vb )
+        i = i + 1
+        Tsb = FKinBody( M, Bi, theta0 )
+        Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
+        wb = [Vb[0],Vb[1],Vb[2]]
+        vb = [Vb[3],Vb[4],Vb[5]]
+        thetaStor.append(theta0)
+
+    return thetaStor
+
