@@ -22,8 +22,9 @@ M = [[1,0,0,-L2-L1],
 
 Tsd = [[0,1,0,-0.6],[0,0,-1,0.1],[-1,0,0,0.1],[0,0,0,1]]
 
-theta0 = [1,1,0.1,0.1,0.1,0.1]
-
+#theta0 = [0.8,-0.1,0.1,-0.1,0.1,-0.01]
+theta0 = 2*pi*np.random.rand(6)-pi#[1,1,1,1,1,1]
+print theta0
 Theta = IKinBody(Bi, M, Tsd, theta0)
 size = np.shape(Theta)
 

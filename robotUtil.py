@@ -523,15 +523,14 @@ def FixedJacobian(Theta, Si, *argv):
         n = len(Theta)
     for i in range(n):
         if i == 0:
-            Js.append(np.asarray(Si[i][:]) * Theta[i])
+            Js.append(np.asarray(Si[i][:]))# * Theta[i])
         else:
             temp = MatrixExp6(np.asarray(Si[0][:]) * Theta[0])
             for j in range(i, n):
                 temp = np.dot(temp, MatrixExp6(np.asarray(Si[j][:]) * Theta[j]))
-
             Js.append(np.dot(Adjoint(temp), Si[i][:]))
 
-    return Js
+    return np.asarray(Js).T
 
 
 def BodyJacobian(Theta, Bi, *argv):
@@ -554,10 +553,9 @@ def BodyJacobian(Theta, Bi, *argv):
             temp = MatrixExp6(-1*np.asarray(Bi[n-1][:]) * Theta[n-1])
             for j in range(n-2, i, -1):
                 temp = np.dot(temp, MatrixExp6(-1*np.asarray(Bi[j][:]) * Theta[j]))
-
             Jb.append(np.dot(Adjoint(temp), Bi[i][:]))
 
-    return Jb
+    return np.asarray(Jb).T
 
 def IKinBody(Bi, M, Tsd, theta0, *argv):
     if argv:
@@ -565,25 +563,29 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
         epsilon_w = argv[1]
     else:
         # set default tolerance
-        epsilon_w = 10e-1
-        epsilon_v = 10e-2
+        epsilon_w = 0.1
+        epsilon_v = 0.01
 
     # initialize parameters
-    maxIter = 10
+    maxIter = 50
     i = 0
     Tsb = FKinBody( M, Bi, theta0 )
     Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
     wb = [Vb[0],Vb[1],Vb[2]]
     vb = [Vb[3],Vb[4],Vb[5]]
-    thetaStor = [np.asarray(theta0)]
+    theta0 = np.asarray(theta0)
+    thetaStor = [theta0]
     # run the loop
-    while (np.linalg.norm(wb) > epsilon_w or np.linalg.norm(vb) > epsilon_v) and i<maxIter:
+    while (np.linalg.norm(wb) > epsilon_w and np.linalg.norm(vb) > epsilon_v) and i<maxIter:
         Jb = BodyJacobian(theta0, Bi)
         theta0 = theta0 + np.dot( np.linalg.pinv(Jb), Vb )
         i = i + 1
+        print np.linalg.norm(vb)
         Tsb = FKinBody( M, Bi, theta0 )
         Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
         wb = [Vb[0],Vb[1],Vb[2]]
         vb = [Vb[3],Vb[4],Vb[5]]
         thetaStor.append(theta0)
+    print Tsb
+    print Tsb-Tsd
     return thetaStor
