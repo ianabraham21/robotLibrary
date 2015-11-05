@@ -13,13 +13,13 @@ M = [[1,0,0,2],
 	[0,0,1,0],
 	[0,0,0,1]]
 
-Tsd = [[1,0,0,0],
-	[0,1,0,1.5],
+Tsd = [[1,0,0,1.5],
+	[0,1,0,0],
 	[0,0,1,0],
 	[0,0,0,1]]
 
 #theta0 = [0.8,-0.1,0.1,-0.1,0.1,-0.01]
-theta0 = [0.01,0.01,0.01]#np.absolute(0.1*np.random.rand(3))#[1,1,1,1,1,1]
+theta0 = np.absolute(0.1*np.random.rand(3))#[1,1,1,1,1,1]
 print "Initial Joint Angles: ", theta0
 Theta = IKinBody(Bi, M, Tsd, theta0)
 print np.cos(Theta[-1][0])+np.cos(Theta[-1][0]+Theta[-1][1])

@@ -448,11 +448,11 @@ def MatrixLog6(T):
     R, p = TransToRp(T)
 
     Rtrace = R[0][0] + R[1][1] + R[2][2]
-    if np.linalg.norm(R - np.eye(3))<10e-4:
+    if np.linalg.norm(R - np.eye(3))<10e-6:
         w = [0,0,0]
-        v = Normalise(p)
+        v = p#Normalise(p)
         th = Magnitude(p)
-    elif (Rtrace+1) < 10e-4:
+    elif (Rtrace+1) < 10e-6:
         th = pi
         w = MatrixLog3(R)
         G = 1 / th * np.eye(3) - 0.5 * np.asarray(VecToso3(w)) + (1 / th - 1 / tan(th / 2.0) / 2.0) * matmult(VecToso3(w), VecToso3(w))
@@ -462,6 +462,7 @@ def MatrixLog6(T):
         w = so3ToVec(1 / (2 * np.sin(th)) * np.subtract(R, RotInv(R)))
         G = 1 / th * np.eye(3) - 0.5 * np.asarray(VecToso3(w)) + (1 / th - 1 / tan(th / 2.0) / 2.0) * matmult(VecToso3(w), VecToso3(w))
         v = np.dot(G, p)
+
     return [w[0] * th,
      w[1] * th,
      w[2] * th,
@@ -553,20 +554,9 @@ def BodyJacobian(Theta, Bi, *argv):
             Jb.append(np.asarray(Bi[i][:]))# * Theta[i])
         else:
             temp = MatrixExp6(-1*np.asarray(Bi[n-1][:]) * Theta[n-1])
-            print "temp value:"
-            print temp
-            print "Inside argument:"
-            print -1*np.asarray(Bi[n-1][:]) * Theta[n-1]
-            print "SE(3) Vector"
-            print VecTose3(-1*np.asarray(Bi[n-1][:]) * Theta[n-1])
-            from scipy.linalg import expm
-            print expm(1*np.asarray(Bi[n-1][:]) * Theta[n-1])
-            raw_input()
             for j in range(n-2, i, -1):
                 temp = np.dot(temp, MatrixExp6(-1*np.asarray(Bi[j][:]) * Theta[j]))
             Jb.append(np.dot(Adjoint(temp), Bi[i][:]))
-            #Jb.append(np.dot(Bi[i][:],Adjoint(temp)))
-
     return np.asarray(Jb).T
 
 def IKinBody(Bi, M, Tsd, theta0, *argv):
@@ -576,7 +566,7 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
     else:
         # set default tolerance
         epsilon_w = 0.01
-        epsilon_v = 0.01
+        epsilon_v = 0.001
 
     # initialize parameters
     maxIter = 100
@@ -592,10 +582,14 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
     while (np.linalg.norm(wb) > epsilon_w or np.linalg.norm(vb) > epsilon_v) and i<maxIter:
         Jb = BodyJacobian(theta0, Bi)
         theta0 = theta0 + np.dot( np.linalg.pinv(Jb), Vb )
+        print Vb
         i = i + 1
         Tsb = FKinBody( M, Bi, theta0 )
         Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
         wb = [Vb[0],Vb[1],Vb[2]]
         vb = [Vb[3],Vb[4],Vb[5]]
         thetaStor.append(theta0)
+    print Tsb
+    print Tsd
+    print i
     return thetaStor
