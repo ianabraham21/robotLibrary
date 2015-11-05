@@ -1,8 +1,8 @@
 zeros:
-  shoulder_pan_joint: 3.8540
-  shoulder_lift_joint: 6
-  elbow_joint: 3
-  wrist_1_joint: 3.4  
-  wrist_2_joint: 3.8
-  wrist_3_joint: 4.7
+  shoulder_pan_joint: -2.29
+  shoulder_lift_joint: 0.22
+  elbow_joint: -0.42
+  wrist_1_joint: 0.2  
+  wrist_2_joint: 2.3
+  wrist_3_joint: 1.5
 

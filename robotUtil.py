@@ -315,7 +315,8 @@ def Adjoint(T):
         """
     try:
         R, p = TransToRp(T)
-        Rt = np.cross(p, R)
+        #Rt = np.cross(p,R)
+        Rt = np.dot(VecToso3(p), R)
         return [[R[0][0],
           R[0][1],
           R[0][2],
@@ -451,7 +452,7 @@ def MatrixLog6(T):
     if np.linalg.norm(R - np.eye(3))<10e-6:
         w = [0,0,0]
         v = p#Normalise(p)
-        th = Magnitude(p)
+        th = np.linalg.norm(p)
     elif (Rtrace+1) < 10e-6:
         th = pi
         w = MatrixLog3(R)
@@ -529,7 +530,7 @@ def FixedJacobian(Theta, Si, *argv):
             Js.append(np.asarray(Si[i][:]))# * Theta[i])
         else:
             temp = MatrixExp6(np.asarray(Si[0][:]) * Theta[0])
-            for j in range(i, n):
+            for j in range(1, i):
                 temp = np.dot(temp, MatrixExp6(np.asarray(Si[j][:]) * Theta[j]))
             Js.append(np.dot(Adjoint(temp), Si[i][:]))
 
@@ -582,13 +583,62 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
     while (np.linalg.norm(wb) > epsilon_w or np.linalg.norm(vb) > epsilon_v) and i<maxIter:
         Jb = BodyJacobian(theta0, Bi)
         theta0 = theta0 + np.dot( np.linalg.pinv(Jb), Vb )
-        print Vb
         i = i + 1
         Tsb = FKinBody( M, Bi, theta0 )
         Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
         wb = [Vb[0],Vb[1],Vb[2]]
         vb = [Vb[3],Vb[4],Vb[5]]
         thetaStor.append(theta0)
+    print "Inverse Kinematics wrt Body: "
+    print Tsb
+    print Tsd
+    print i
+    return thetaStor
+
+def IKinFixed(Si, M, Tsd, theta0, *argv):
+    if argv:
+        epsilon_v = argv[0]
+        epsilon_w = argv[1]
+    else:
+        # set default tolerance
+        epsilon_w = 0.01
+        epsilon_v = 0.01
+
+    # initialize parameters
+    maxIter = 100
+    i = 0
+    Tsb = FKinFixed( M, Si, theta0 )
+    Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
+    Vs = np.dot(Adjoint(Tsb),Vb)
+    wb = [Vb[0],Vb[1],Vb[2]]
+    vb = [Vb[3],Vb[4],Vb[5]]
+    theta0 = np.asarray(theta0)
+    thetaStor = [theta0]
+    
+    # run the loop
+    while (np.linalg.norm(wb) > epsilon_w or np.linalg.norm(vb) > epsilon_v) and i<maxIter:
+        Js = FixedJacobian(theta0,Si)
+        #Jb = np.dot(Adjoint(TransInv(Tsb)),Js)
+        #print "Tsb="
+        #print Tsb
+        #print "Tsb_inv="
+        #print np.asarray(TransInv(Tsb))
+        #print "Adj= "
+        #print np.asarray(Adjoint(TransInv(Tsb)))
+        #print "Js= "
+        #print Js
+        #print "Jb="
+        #print Jb
+        #theta0 = theta0 + np.dot( np.linalg.pinv(Jb), Vb )
+        theta0 = theta0 + np.dot( np.linalg.pinv(Js), Vs)
+        i = i + 1
+        Tsb = FKinFixed( M, Si, theta0 )
+        Vb = MatrixLog6( np.dot(TransInv(Tsb), Tsd) )
+        Vs = np.dot(Adjoint(Tsb),Vb)
+        wb = [Vb[0],Vb[1],Vb[2]]
+        vb = [Vb[3],Vb[4],Vb[5]]
+        thetaStor.append(theta0)
+    print "Inverse Kinematics wrt Fixed:"
     print Tsb
     print Tsd
     print i
