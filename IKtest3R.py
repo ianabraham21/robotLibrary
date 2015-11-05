@@ -35,7 +35,6 @@ Theta = IKinFixed(Si, M, Tsd, theta0)
 size = np.shape(Theta)
 
 
-'''
 import csv
 with open('test1.csv','wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter=',',
@@ -43,4 +42,3 @@ with open('test1.csv','wb') as csvfile:
     spamwriter.writerow(['time','shoulder_pan_joint','shoulder_lift_joint','elbow_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint'])
     for i in range(size[0]):
     	spamwriter.writerow(np.insert(Theta[i][:],0,i*0.1))
-    	'''

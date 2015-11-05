@@ -592,7 +592,10 @@ def IKinBody(Bi, M, Tsd, theta0, *argv):
     print "Inverse Kinematics wrt Body: "
     print Tsb
     print Tsd
+    print "Iterations: "
     print i
+    print "Final Configuration: "
+    print theta0
     return thetaStor
 
 def IKinFixed(Si, M, Tsd, theta0, *argv):
@@ -641,5 +644,8 @@ def IKinFixed(Si, M, Tsd, theta0, *argv):
     print "Inverse Kinematics wrt Fixed:"
     print Tsb
     print Tsd
+    print "Iterations: "
     print i
+    print "Final Configuration: "
+    print theta0
     return thetaStor
