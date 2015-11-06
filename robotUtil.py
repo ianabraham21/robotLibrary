@@ -643,7 +643,7 @@ def IKinFixed(Si, M, Tsd, theta0, *argv):
         thetaStor.append(theta0)
     print "Inverse Kinematics wrt Fixed:"
     print Tsb
-    print Tsd
+    print np.asarray(Tsd)
     print "Iterations: "
     print i
     print "Final Configuration: "
