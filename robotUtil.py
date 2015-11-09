@@ -621,18 +621,6 @@ def IKinFixed(Si, M, Tsd, theta0, *argv):
     # run the loop
     while (np.linalg.norm(wb) > epsilon_w or np.linalg.norm(vb) > epsilon_v) and i<maxIter:
         Js = FixedJacobian(theta0,Si)
-        #Jb = np.dot(Adjoint(TransInv(Tsb)),Js)
-        #print "Tsb="
-        #print Tsb
-        #print "Tsb_inv="
-        #print np.asarray(TransInv(Tsb))
-        #print "Adj= "
-        #print np.asarray(Adjoint(TransInv(Tsb)))
-        #print "Js= "
-        #print Js
-        #print "Jb="
-        #print Jb
-        #theta0 = theta0 + np.dot( np.linalg.pinv(Jb), Vb )
         theta0 = theta0 + np.dot( np.linalg.pinv(Js), Vs)
         i = i + 1
         Tsb = FKinFixed( M, Si, theta0 )
