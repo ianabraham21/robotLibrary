@@ -453,6 +453,7 @@ def MatrixLog6(T):
         w = [0,0,0]
         v = p#Normalise(p)
         th = np.linalg.norm(p)
+	return [w[0],w[1],w[2],v[0],v[1],v[2]]
     elif (Rtrace+1) < 10e-6:
         th = pi
         w = MatrixLog3(R)
