@@ -638,3 +638,83 @@ def IKinFixed(Si, M, Tsd, theta0, *argv):
     print "Final Configuration: "
     print theta0
     return thetaStor
+
+
+def CubicTimeScaling(T):
+    '''
+    Takes total travel time T and returns the corresponding s parameters
+    '''
+    if T <= 0:
+        print "T has to be greater than or equal to 0 "
+    else:
+        return [0,0,3/(T**2),-2/(T**3)]
+
+def QuinticTimeScaling(T):
+    '''
+    Takes total travel time T and returns the corresponding s parameters
+    '''
+    if T <= 0:
+        print "T has to be greater than or equal to 0 "
+    else:
+        return [0,0,0,10/(T**3),-15/(T**4),6/(T**5)]
+
+def JointTrajectory(thetaStart, thetaEnd, T, N, scaleMethod="Cubic"):
+    '''
+    Function takes initial joint thetastart and end thetaend, total elapsed time T,
+    number of discrete points N (where N >= 2) and time scaling method(default is cubic)
+
+    Note: thetaStart and thetaEnd are assumed to be a numpy array
+    ''' 
+    if scaleMethod == "Cubic":
+        a = CubicTimeScaling(T)
+        s = lambda t: a[0] + a[1]*t + a[2]*t**2 + a[3]*t**3
+    else if scaleMethod == "Quintic":
+        a = QuinticTimeScaling(T)
+        s = lambda t: a[0] + a[1]*t + a[2]*t**2 + a[3]*t**3 + a[4]*t**4 + a[5]*t**5
+    else:
+        print " Scaling method unknown: defaulting to Cubic"
+        a = CubicTimeScaling(T)
+        s = lambda t: a[0] + a[1]*t + a[2]*t**2 + a[3]*t**3
+
+    trajectory = []
+    t0 = 0
+    ts = T/(N-1)
+    trajectory.append(thetaStart)
+    trajectory[-1].insert(0,t0)
+    for i in range(1,N):
+        t0 += ts
+        thetaS = thetaStart + s(t0)*(thetaEnd - thetaStart)
+        trajectory.append(thetaS)
+        trajectory[-1].insert(0,t0)
+
+    return np.asarray(trajectory)
+
+def ScrewTrajectory(Xstart, Xend, T, N, scaleMethod="Cubic"):
+    '''
+    Function takes initial endeff config and end endeff config, total elapsed time T,
+    number of discrete points N (where N >= 2) and time scaling method(default is cubic)
+    ''' 
+
+def CartesianTrajectory():
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
