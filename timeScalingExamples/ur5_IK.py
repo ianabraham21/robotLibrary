@@ -65,7 +65,7 @@ if saveData==True:
         spamwriter.writerow(['time','shoulder_pan_joint','shoulder_lift_joint','elbow_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint'])
         for i in range(size[0]):
             writeList = []
-            spamwriter.writerow(np.insert(trajectoryQ[0][:],0,t[i]))
+            spamwriter.writerow(np.insert(trajectoryQ[i][:],0,t[i]))
 
 
 
