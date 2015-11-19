@@ -1,8 +1,9 @@
 from robotUtil import *
 from math import pi
 import numpy as np
+import matplotlib.pyplot as plt
 
-saveData = False
+saveData = True
 
 # MACHINE CONSTANTS
 H1 = 89*1e-3
@@ -40,21 +41,41 @@ Tsd = [[0,1,0,-0.6],
     [0,0,0,1]]
 
 
-theta0 = 0.01*np.random.randn(6)#
-#theta0 = [0.001,0.001,0.001,0.001,0.001,0.001]
-# this one below works well
-#theta0 = [-0.00263374, -0.00845871, -0.00511406, -0.00517887,  0.00351958,  0.00924158]
-# also works well with IK
-#theta0 = [-0.00686114  0.00922843  0.00602058 -0.00167514  0.00557784  0.00661908]
+theta0 = 0.1*np.ones(6)#
+thetaf = pi/2*np.ones(6)
 print "Initial Joint Angles: "
 print theta0
-Theta = IKinBody(Bi, M, Tsd, theta0)
-Theta = IKinFixed(Si, M, Tsd, theta0)
+
+trajectoryQ = JointTrajectory(theta0,thetaf,2.0,101,scaleMethod="Quintic")
+trajectoryC = JointTrajectory(theta0,thetaf,2.0,101,scaleMethod="Cubic")
+thetalistQ = [i[1] for i in trajectoryQ]
+thetalistC = [i[1] for i in trajectoryC]
+t = np.arange(0.0,2.0, 2.0/(101))
+# plt.plot(t, thetalistQ)
+# plt.plot(t, thetalistC)
+# plt.show()
+
+
 if saveData==True:
+    size = np.shape(trajectoryQ)
     import csv
     with open('test1.csv','wb') as csvfile:
         spamwriter = csv.writer(csvfile, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    spamwriter.writerow(['time','shoulder_pan_joint','shoulder_lift_joint','elbow_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint'])
-    for i in range(size[0]):
-        spamwriter.writerow(np.insert(Theta[i][:],0,i*0.1))
+        spamwriter.writerow(['time','shoulder_pan_joint','shoulder_lift_joint','elbow_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint'])
+        for i in range(size[0]):
+            writeList = []
+            spamwriter.writerow(np.insert(trajectoryQ[0][:],0,t[i]))
+
+
+
+
+
+
+
+
+
+
+
+
+
