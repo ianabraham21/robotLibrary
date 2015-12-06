@@ -51,22 +51,56 @@ trajectoryC = JointTrajectory(theta0,thetaf,2.0,101,scaleMethod="Cubic")
 thetalistQ = [i[1] for i in trajectoryQ]
 thetalistC = [i[1] for i in trajectoryC]
 t = np.arange(0.0,2.0, 2.0/(101))
-# plt.plot(t, thetalistQ)
-# plt.plot(t, thetalistC)
+plt.plot(t, thetalistQ, label='Quintic')
+plt.plot(t, thetalistC, label='Cubic')
+plt.xlabel('time')
+plt.ylabel("$theta$ (t)")
+plt.legend(loc="upper left")
+plt.show()
+
+
+# Xstart = FKinBody(M, Bi, theta0)
+# Xend = FKinBody(M, Bi, thetaf)
+
+# trajectory_Cart = CartesianTrajectory(Xstart, Xend, 1.0, 101, scaleMethod="Quintic")
+
+# size = np.shape(trajectory_Cart)
+# thetaStor = []
+# thetaStor.append(theta0)
+# for i in range(1,size[0]): 
+#     Tsd = RpToTrans(trajectory_Cart[i][0],trajectory_Cart[i][1])
+#     theta0 = IKinBody(Bi, M, Tsd, theta0)
+#     thetaStor.append(theta0)
+
+# size = np.shape(thetaStor)
+
+# for i in range(size[1]):
+#     thetaJ0 = [j[i] for j in thetaStor]
+#     plt.plot(t,thetaJ0)
+
 # plt.show()
 
 
 if saveData==True:
     size = np.shape(trajectoryQ)
     import csv
-    with open('test1.csv','wb') as csvfile:
+    with open('trajectoryQ.csv','wb') as csvfile:
         spamwriter = csv.writer(csvfile, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
         spamwriter.writerow(['time','shoulder_pan_joint','shoulder_lift_joint','elbow_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint'])
         for i in range(size[0]):
             writeList = []
             spamwriter.writerow(np.insert(trajectoryQ[i][:],0,t[i]))
-
+# if saveData==True:
+#     size = np.shape(thetaStor)
+#     import csv
+#     with open('CartesianTrajectory.csv','wb') as csvfile:
+#         spamwriter = csv.writer(csvfile, delimiter=',',
+#                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
+#         spamwriter.writerow(['time','shoulder_pan_joint','shoulder_lift_joint','elbow_joint','wrist_1_joint','wrist_2_joint','wrist_3_joint'])
+#         for i in range(size[0]):
+#             writeList = []
+#             spamwriter.writerow(np.insert(thetaStor[i][:],0,t[i]))
 
 
 

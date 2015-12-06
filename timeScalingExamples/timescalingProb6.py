@@ -42,7 +42,7 @@ Tsd = [[0,1,0,-0.6],
 
 
 theta0 = 0.1*np.ones(6)#
-thetaf = -pi/2*np.ones(6)
+thetaf = pi/2*np.ones(6)
 print "Initial Joint Angles: "
 print theta0
 
@@ -55,9 +55,12 @@ t = np.arange(0.0,1.0, 1.0/(101))
 # plt.plot(t, thetalistC)
 # plt.show()
 
-
+print "Xstart: "
 Xstart = FKinBody(M, Bi, theta0)
+print Xstart
 Xend = FKinBody(M, Bi, thetaf)
+print "Xend: "
+print Xend
 
 trajectory_Cart = CartesianTrajectory(Xstart, Xend, 1.0, 101, scaleMethod="Quintic")
 
@@ -74,7 +77,8 @@ size = np.shape(thetaStor)
 for i in range(size[1]):
     thetaJ0 = [j[i] for j in thetaStor]
     plt.plot(t,thetaJ0)
-
+plt.xlabel('time')
+plt.ylabel('Joint Angles')
 plt.show()
 
 

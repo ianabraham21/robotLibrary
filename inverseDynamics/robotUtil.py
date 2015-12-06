@@ -459,7 +459,7 @@ def MatrixLog6(T):
         w = [0,0,0]
         v = p#Normalise(p)
         th = np.linalg.norm(p)
-	return [w[0],w[1],w[2],v[0],v[1],v[2]]
+        return [w[0],w[1],w[2],v[0],v[1],v[2]]
     elif (Rtrace+1) < 10e-6:
         th = pi
         w = MatrixLog3(R)
@@ -744,9 +744,47 @@ def CartesianTrajectory(Xstart, Xend, T, N, scaleMethod="Cubic"):
 
     return trajectory
 
+def InverseDynamics(theta, thetadot, thetaddot, robotDisc, g=[0,0,-9.81], Ftip=[0,0,0,0,0,0]):
+    ''' Inputs: initial joint variables
+        default gravity, force at dip
+        discription of robot as a dictionary of M, G, and screw axis S wrt base frame
+        Output: joint torques as a function of time
+    '''
+    for i in range(n):
+        Ai = np.dot(np.dot(Adjoint(TransInv(Mi[i])),Si[i]),theta[i]) # dafuq, gotta check this
+        Tii = np.dot(Mii[i],MatrixLog6(Ai))
+        Vi = np.dot(Adjoint(Tii),Vi) + np.dot(Ai,thetaddot[i])
+        Vidot = np.dot(Adjoint(Tii),Vidot) + np.dot(bracketThing(Vi, Ai), thetadot[i]) +np.dot(Ai, thetadot[i])
 
+    for i in range(n,1,-1):
+        Fi = np.dot(TransInv(Adjoint(Tii[i])), Fi) + np.dot(Gi, Vidot) + TransInv(Adjoint(Vi[i]), np.dot(Gi,Vi))
+        taui = np.dot(Fi, Ai)
+    tau = []
+    return tau
 
+def InertiaMatrix():
+    return []
 
+def CoriolisForces():
+    return []
+
+def GravityForces():
+    return []
+
+def EndEffectorForces():
+    return []
+
+def ForwardDynamics():
+    return []
+
+def EulerStep():
+    return []
+
+def InverseDynamicsTrajectory():
+    return []
+
+def ForwardDynamicsTrajectory():
+    return []
 
 
 
