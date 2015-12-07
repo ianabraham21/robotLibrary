@@ -744,8 +744,15 @@ def CartesianTrajectory(Xstart, Xend, T, N, scaleMethod="Cubic"):
 
     return trajectory
 
+def LieBracket(V1,V2):
+    omegahat = VecToso3(V1[0:2])
+    vhat = VecToso3(V1[3:5])
+    Va = np.dot(omegahat, V2[0:2])
+    Vb = np.asarray(np.dot(vhat, V2[0:2])) + np.asarray(np.dot(omegahat, V2[3:5]))
+    return [Va[0],Va[1],Va[2],Vb[0],Vb[1],Vb[2]]
+
 def InverseDynamics(theta, thetadot, thetaddot, robotDisc,
-                     g=[0,0,-9.81], Ftip=[0,0,0,0,0,0], Vi=[0,0,0,0,0,0]):
+                     Vidot=[[0,0,-9.81]], Ftip=[0,0,0,0,0,0], Vi=[[0,0,0,0,0,0]]):
     ''' Inputs: initial joint variables
         default gravity, force at tip
         discription of robot as a dictionary of M, G, and screw axis S wrt base frame
@@ -754,17 +761,22 @@ def InverseDynamics(theta, thetadot, thetaddot, robotDisc,
     Mi = robotDisc['Mi']
     Mii = robotDisc['Mii']
     Si = robotDisc['Si']
+    Gi = robotDisc['Gi']
+    Ai = []
+    Tii = []
     for i in range(n):
-        Ai = np.dot(np.dot(Adjoint(TransInv(Mi[i])),Si[i]),theta[i]) # dafuq, gotta check this
-        Tii = np.dot(Mii[i],MatrixLog6(Ai))
-        Vi.append(np.dot(Adjoint(Tii),Vi[i]) + np.dot(Ai,thetaddot[i]))
-        Vidot = np.dot(Adjoint(Tii),Vidot) + np.dot(bracketThing(Vi, Ai), thetadot[i]) +np.dot(Ai, thetadot[i])
+        Ai.apend(np.dot(np.dot(Adjoint(TransInv(Mi[i])),Si[i]),theta[i])) # dafuq, gotta check this
+        Tii.append(np.dot(Mii[i],MatrixLog6(Ai[-1])))
+        Vi.append(np.dot(Adjoint(Tii[-1]),Vi[i]) + np.dot(Ai[-1],thetaddot[i]))
+        Vidot.append(np.dot(Adjoint(Tii),Vidot[-1]) +\
+            np.dot(LieBracket(Vi[-1], Ai[-1]), thetadot[i]) + np.dot(Ai[-1], thetaddot[i]))
 
+    Fi = Ftip # set the initial force for the backwards iterations
     for i in range(n,1,-1):
-        Fi = np.dot(TransInv(Adjoint(Tii[i])), Fi) + np.dot(Gi, Vidot) + TransInv(Adjoint(Vi[i]), np.dot(Gi,Vi))
-        taui = np.dot(Fi, Ai)
-    tau = []
-    return tau
+        Fi = np.dot(TransInv(Adjoint(Tii[i])), Fi) +\
+            np.dot(Gi[i], Vidot[i]) + TransInv(Adjoint(Vi[i]), np.dot(Gi[-1],Vi[-1]))
+        taui.append(np.dot(Fi, Ai[i]))
+    return taui
 
 def InertiaMatrix():
     return []
