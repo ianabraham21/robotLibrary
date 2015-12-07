@@ -74,3 +74,12 @@ Gi = [G0,G1,G2,G3,G4,G5,G6]
 robotDisc = {'Mi': Mi, 'Mii': Mii, 'Si': Si, 'Gi': Gi}
 
 
+# print InverseDynamics([0.1,0.2,0.,0.1,0.,1], [0,0,0,0,0,0], [0,0,0,0,0,0], robotDisc)
+print "inertia"
+print np.asarray(InertiaMatrix([0.1,0.2,0.,0.1,0.,1], robotDisc))
+
+print "coriolis"
+print CoriolisForces([0.1,0.2,0.,0.1,0.,1], [0,0,5,0,0,0], robotDisc)
+
+print "Gravity Forces"
+print GravityForces([0.1,0.2,0.,0.1,0.,1], 9.81, robotDisc)

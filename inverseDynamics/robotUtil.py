@@ -395,12 +395,15 @@ def AxisAng6(V):
         theta = Magnitude([V[0], V[1], V[2]])
         if theta == 0:
             theta = Magnitude([V[3], V[4], V[5]])
-            return ([0,
-              0,
-              0,
-              V[3] / theta * 1.0,
-              V[4] / theta * 1.0,
-              V[5] / theta * 1.0], theta)
+            if theta == 0:
+                return ([0,0,0,0,0,0],0)
+            else:
+                return ([0,
+                  0,
+                  0,
+                  V[3] / theta * 1.0,
+                  V[4] / theta * 1.0,
+                  V[5] / theta * 1.0], theta)
         else:
             return ([V[0] / theta * 1.0,
               V[1] / theta * 1.0,
@@ -745,18 +748,25 @@ def CartesianTrajectory(Xstart, Xend, T, N, scaleMethod="Cubic"):
     return trajectory
 
 def LieBracket(V1,V2):
-    omegahat = VecToso3(V1[0:2])
-    vhat = VecToso3(V1[3:5])
-    Va = np.dot(omegahat, V2[0:2])
-    Vb = np.asarray(np.dot(vhat, V2[0:2])) + np.asarray(np.dot(omegahat, V2[3:5]))
+    omegahat = VecToso3(V1[0:3])
+    vhat = VecToso3(V1[3:6])
+    Va = np.dot(omegahat, V2[0:3])
+    Vb = np.asarray(np.dot(vhat, V2[0:3])) + np.asarray(np.dot(omegahat, V2[3:6]))
     return [Va[0],Va[1],Va[2],Vb[0],Vb[1],Vb[2]]
+def adT(V,F):
+
+    omegahat = VecToso3(V[0:3])
+    vhat = VecToso3(V[3:6])
+    Sa = -np.dot(omegahat, F[0:3]) - np.dot(vhat,F[3:6])
+    Sb = -np.dot(omegahat, F[3:6])
+    return [Sa[0],Sa[1],Sa[2],Sb[0],Sb[1],Sb[2]]
 
 def InverseDynamics(theta, thetadot, thetaddot, robotDisc,
-                     Vidot=[[0,0,-9.81]], Ftip=[0,0,0,0,0,0], Vi=[[0,0,0,0,0,0]]):
+                     Vidot=[[0,0,0,0,0,-9.81]], Ftip=[0,0,0,0,0,0], Vi=[[0,0,0,0,0,0]]):
     ''' Inputs: initial joint variables
         default gravity, force at tip
         discription of robot as a dictionary of M, G, and screw axis S wrt base frame
-        Output: joint torques as a function of time
+        Output: joint torques at that instant of time
     '''
     Mi = robotDisc['Mi']
     Mii = robotDisc['Mii']
@@ -764,37 +774,62 @@ def InverseDynamics(theta, thetadot, thetaddot, robotDisc,
     Gi = robotDisc['Gi']
     Ai = []
     Tii = []
+    n = len(theta)
     for i in range(n):
-        Ai.apend(np.dot(np.dot(Adjoint(TransInv(Mi[i])),Si[i]),theta[i])) # dafuq, gotta check this
-        Tii.append(np.dot(Mii[i],MatrixLog6(Ai[-1])))
-        Vi.append(np.dot(Adjoint(Tii[-1]),Vi[i]) + np.dot(Ai[-1],thetaddot[i]))
-        Vidot.append(np.dot(Adjoint(Tii),Vidot[-1]) +\
-            np.dot(LieBracket(Vi[-1], Ai[-1]), thetadot[i]) + np.dot(Ai[-1], thetaddot[i]))
 
+        Ai.append(np.dot(Adjoint(TransInv(Mi[i])),Si[i])) # dafuq, gotta check this
+        
+        Tii.append(np.dot(Mii[i],MatrixExp6(np.dot(Ai[-1],theta[i]))))
+        
+        Vi.append(np.dot(Adjoint(TransInv(Tii[-1])),Vi[-1]) + np.dot(Ai[-1],thetaddot[i]))
+        
+        # note: because of the append to Vi and Ai, the index below changes to i
+        # instead of i-1
+        Vidot.append(np.dot(Adjoint(TransInv(Tii[-1])),Vidot[-1]) +\
+            np.dot(LieBracket(Vi[-1], Ai[-1]), thetadot[i]) + np.dot(Ai[-1], thetaddot[i]))
+    taui = []
     Fi = Ftip # set the initial force for the backwards iterations
-    for i in range(n,1,-1):
-        Fi = np.dot(TransInv(Adjoint(Tii[i])), Fi) +\
-            np.dot(Gi[i], Vidot[i]) + TransInv(Adjoint(Vi[i]), np.dot(Gi[-1],Vi[-1]))
+    for i in range(n-1,0,-1):
+        Fi = np.dot(np.transpose(Adjoint(Tii[i])), Fi) +\
+            np.dot(Gi[i], Vidot[i]) - adT(Vi[i], np.dot(Gi[i],Vi[i]))
         taui.append(np.dot(Fi, Ai[i]))
     return taui
 
-def InertiaMatrix():
-    return []
+def InertiaMatrix(theta, robotDisc):
+    thetadot = np.zeros(len(theta))
+    thetaddot = np.zeros(len(theta))
+    M_theta = []
+    for i in range(len(theta)):
+        M_thetai = thetaddot
+        M_thetai[i] = 1
+        M_theta.append(InverseDynamics(theta, thetadot, M_thetai,robotDisc, Vidot=[[0,0,0,0,0,0]]))
+    return M_theta
 
-def CoriolisForces():
-    return []
+def CoriolisForces(theta,thetadot,robotDisc):
+    thetaddot = np.zeros(len(theta))
+    return InverseDynamics(theta, thetadot, thetaddot, robotDisc, Vidot=[[0,0,0,0,0,0]])
 
-def GravityForces():
-    return []
+def GravityForces(theta, g, robotDisc):
+    thetadot = np.zeros(len(theta))
+    thetaddot = np.zeros(len(theta))
+    return InverseDynamics(theta, thetadot, thetaddot, robotDisc, Vidot=[[0,0,0,0,0,g]])
 
-def EndEffectorForces():
-    return []
+def EndEffectorForces(theta, Ftip, robotDisc):
+    thetadot = np.zeros(len(theta))
+    thetaddot = np.zeros(len(theta))
+    return InverseDynamics(theta, thetadot, thetaddot, robotDisc, Ftip=Ftip, Vidot=[[0,0,0,0,0,0]])
 
-def ForwardDynamics():
-    return []
+def ForwardDynamics(theta, thetadot, tau, robotDisc, g, Ftip):
+    b = tau - CoriolisForces(theta, thetadot, robotDisc) -\
+            GravityForces(theta, g, robotDisc) -\
+            EndEffectorForces(theta, Ftip, robotDisc)
+    A = InertiaMatrix(theta, robotDisc)
+    return np.dot(np.pinv(A),b)
 
-def EulerStep():
-    return []
+def EulerStep(theta, thetadot, thetaddot, dt):
+    thetan = theta + np.dot(thetadot,dt)
+    thetadotn = thetadot + np.dot(thetaddot, dt)
+    return (thetan, thetadotn)
 
 def InverseDynamicsTrajectory():
     return []
