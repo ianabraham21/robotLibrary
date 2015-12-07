@@ -744,16 +744,20 @@ def CartesianTrajectory(Xstart, Xend, T, N, scaleMethod="Cubic"):
 
     return trajectory
 
-def InverseDynamics(theta, thetadot, thetaddot, robotDisc, g=[0,0,-9.81], Ftip=[0,0,0,0,0,0]):
+def InverseDynamics(theta, thetadot, thetaddot, robotDisc,
+                     g=[0,0,-9.81], Ftip=[0,0,0,0,0,0], Vi=[0,0,0,0,0,0]):
     ''' Inputs: initial joint variables
-        default gravity, force at dip
+        default gravity, force at tip
         discription of robot as a dictionary of M, G, and screw axis S wrt base frame
         Output: joint torques as a function of time
     '''
+    Mi = robotDisc['Mi']
+    Mii = robotDisc['Mii']
+    Si = robotDisc['Si']
     for i in range(n):
         Ai = np.dot(np.dot(Adjoint(TransInv(Mi[i])),Si[i]),theta[i]) # dafuq, gotta check this
         Tii = np.dot(Mii[i],MatrixLog6(Ai))
-        Vi = np.dot(Adjoint(Tii),Vi) + np.dot(Ai,thetaddot[i])
+        Vi.append(np.dot(Adjoint(Tii),Vi[i]) + np.dot(Ai,thetaddot[i]))
         Vidot = np.dot(Adjoint(Tii),Vidot) + np.dot(bracketThing(Vi, Ai), thetadot[i]) +np.dot(Ai, thetadot[i])
 
     for i in range(n,1,-1):
@@ -785,7 +789,6 @@ def InverseDynamicsTrajectory():
 
 def ForwardDynamicsTrajectory():
     return []
-
 
 
 
