@@ -1,4 +1,4 @@
-from robotUtil import *
+import robotUtil as ru
 from math import pi
 import numpy as np
 
@@ -48,8 +48,8 @@ theta0 = 0.1*np.random.randn(7)#
 #theta0 = [-0.00686114  0.00922843  0.00602058 -0.00167514  0.00557784  0.00661908]
 print "Initial Joint Angles: "
 print theta0
-Theta = IKinBody(Bi, M, Tsd, theta0)
-Theta = IKinFixed(Si, M, Tsd, theta0)
+Theta = ru.IKinBody(Bi, M, Tsd, theta0)
+Theta = ru.IKinFixed(Si, M, Tsd, theta0)
 if saveData==True:
     size = np.shape(Theta)
     import csv
