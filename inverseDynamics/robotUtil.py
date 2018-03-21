@@ -9,7 +9,7 @@ def matmult(*x):
     10
         """
     return reduce(np.dot, x)
-
+// hello
 
 def Magnitude(V):
     """
